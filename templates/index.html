@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>Seasonal Color Classifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@300;400;600&family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom, #6200ea 40%, #f4f4f9 40%);
+            color: #333;
+            min-height: 100vh;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        /* Dotted background pattern for the body */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100vh;
+            width: 100%;
+            background: #fff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .description {
+            background: #6200ea;
+            color: #fff;
+            padding: 4em;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            font-family: doto;
+        }
+
+        /* Add dots to the description section */
+        .description::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        .logo {
+            position: absolute;
+            top: 2em;
+            left: 2em;
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo i {
+            font-size: 2em;
+            color: #6200ea;
+        }
+
+        .description h1 {
+            font-size: 3.5em;
+            margin-bottom: 0.5em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .description p {
+            font-size: 1.4em;
+            line-height: 1.8;
+            margin-bottom: 2em;
+        }
+
+        main {
+            padding: 4em;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #fff;
+            position: relative;
+        }
+
+        /* Add dots to the main section */
+        main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(98, 0, 234, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        form {
+            display: grid;
+            gap: 2em;
+            margin-bottom: 2em;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+            position: relative;
+            z-index: 3;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #333;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        select {
+            padding: 1em;
+            font-size: 1.1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: #fff;
+            position: relative;
+            z-index: 3;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #6200ea;
+            box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1);
+        }
+
+        button {
+            padding: 1.2em;
+            font-size: 1.2em;
+            font-weight: 600;
+            background-color: #6200ea;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1em;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            position: relative;
+            z-index: 3;
+        }
+
+        button:hover {
+            background-color: #3700b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(98, 0, 234, 0.2);
+        }
+
+        .result {
+            margin-top: 2em;
+            padding: 1.5em;
+            border-radius: 12px;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        /* Add dots to the result section */
+        .result::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(98, 0, 234, 0.1) 1px, transparent 1px);
+            background-size: 15px 15px;
+            pointer-events: none;
+            border-radius: 12px;
+        }
+
+        .result * {
+            position: relative;
+            z-index: 3;
+        }
+
+        .result h2 {
+            color: #6200ea;
+            margin-bottom: 1em;
+            font-size: 1.8em;
+        }
+
+        .result ul {
+            list-style: none;
+            margin: 1em 0;
+        }
+
+        .result li {
+            margin: 0.8em 0;
+            font-size: 1.1em;
+        }
+
+        .social-links {
+            position: absolute;
+            bottom: 2em;
+            left: 4em;
+            display: flex;
+            gap: 1.5em;
+        }
+
+        .social-links a {
+            color: #fff;
+            font-size: 1.8em;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #f4f4f9;
+            transform: translateY(-3px);
+        }
+
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: #6200ea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .hexagon {
+            margin-bottom: 1.5em;
+            overflow: hidden;
+            position: relative;
+            width: 15em;
+            height: 15em;
+        }
+
+        .hexagon__group, .hexagon__sector, .hexagon__sector:before, .hexagon__sector:after {
+            position: absolute;
+        }
+
+        .hexagon__group {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hexagon__group:nth-child(2) .hexagon__sector,
+        .hexagon__group:nth-child(2) .hexagon__sector:before,
+        .hexagon__group:nth-child(2) .hexagon__sector:after {
+            animation-delay: calc(8s * -1/6);
+        }
+
+        .hexagon__group:nth-child(3) .hexagon__sector,
+        .hexagon__group:nth-child(3) .hexagon__sector:before,
+        .hexagon__group:nth-child(3) .hexagon__sector:after {
+            animation-delay: calc(8s * -2/6);
+        }
+
+        .hexagon__group:nth-child(4) .hexagon__sector,
+        .hexagon__group:nth-child(4) .hexagon__sector:before,
+        .hexagon__group:nth-child(4) .hexagon__sector:after {
+            animation-delay: calc(8s * -3/6);
+        }
+
+        .hexagon__group:nth-child(5) .hexagon__sector,
+        .hexagon__group:nth-child(5) .hexagon__sector:before,
+        .hexagon__group:nth-child(5) .hexagon__sector:after {
+            animation-delay: calc(8s * -4/6);
+        }
+
+        .hexagon__group:nth-child(6) .hexagon__sector,
+        .hexagon__group:nth-child(6) .hexagon__sector:before,
+        .hexagon__group:nth-child(6) .hexagon__sector:after {
+            animation-delay: calc(8s * -5/6);
+        }
+
+        .hexagon__group:nth-child(odd) {
+            transform: rotate(30deg);
+        }
+
+        .hexagon__sector, .hexagon__sector:before, .hexagon__sector:after {
+            animation-duration: 8s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            width: 0.2em;
+            height: 0.2em;
+        }
+
+        .hexagon__sector {
+            animation-name: moveOut1;
+            top: calc(50% - 0.1em);
+            left: calc(50% - 0.1em);
+        }
+
+        .hexagon__sector:nth-child(2) {
+            animation-name: moveOut2;
+        }
+
+        .hexagon__sector:nth-child(3) {
+            animation-name: moveOut3;
+        }
+
+        .hexagon__sector:nth-child(4) {
+            animation-name: moveOut4;
+        }
+
+        .hexagon__sector:nth-child(5) {
+            animation-name: moveOut5;
+        }
+
+        .hexagon__sector:nth-child(6) {
+            animation-name: moveOut6;
+        }
+
+        .hexagon__sector:before, .hexagon__sector:after {
+            animation-name: ripple;
+            background-color: currentColor;
+            border-radius: 0.1em;
+            content: "";
+            display: block;
+            top: 0;
+            left: 0;
+            transform-origin: 0.1em 0.1em;
+        }
+
+        .hexagon__sector:before {
+            transform: rotate(-30deg)
+        }
+
+        .hexagon__sector:after {
+            transform: rotate(-150deg)
+        }
+
+        @keyframes moveOut1 {
+            from { transform: translateY(0) scale(0); }
+            3% { transform: translateY(0.2em) scale(1); }
+            97% { transform: translateY(7.3em) scale(1); }
+            to { transform: translateY(7.5em) scale(0); }
+        }
+
+        @keyframes moveOut2 {
+            from { transform: rotate(60deg) translateY(0) scale(0); }
+            3% { transform: rotate(60deg) translateY(0.2em) scale(1); }
+            97% { transform: rotate(60deg) translateY(7.3em) scale(1); }
+            to { transform: rotate(60deg) translateY(7.5em) scale(0); }
+        }
+
+        @keyframes moveOut3 {
+            from { transform: rotate(120deg) translateY(0) scale(0); }
+            3% { transform: rotate(120deg) translateY(0.2em) scale(1); }
+            97% { transform: rotate(120deg) translateY(7.3em) scale(1); }
+            to { transform: rotate(120deg) translateY(7.5em) scale(0); }
+        }
+
+        @keyframes moveOut4 {
+            from { transform: rotate(180deg) translateY(0) scale(0); }
+            3% { transform: rotate(180deg) translateY(0.2em) scale(1); }
+            97% { transform: rotate(180deg) translateY(7.3em) scale(1); }
+            to { transform: rotate(180deg) translateY(7.5em) scale(0); }
+        }
+
+        @keyframes moveOut5 {
+            from { transform: rotate(240deg) translateY(0) scale(0); }
+            3% { transform: rotate(240deg) translateY(0.2em) scale(1); }
+            97% { transform: rotate(240deg) translateY(7.3em) scale(1); }
+            to { transform: rotate(240deg) translateY(7.5em) scale(0); }
+        }
+
+        @keyframes moveOut6 {
+            from { transform: rotate(300deg) translateY(0) scale(0); }
+            3% { transform: rotate(300deg) translateY(0.2em) scale(1); }
+            97% { transform: rotate(300deg) translateY(7.3em) scale(1); }
+            to { transform: rotate(300deg) translateY(7.5em) scale(0); }
+        }
+
+        @keyframes ripple {
+            from, to { width: 0.2em; }
+            33% { width: 2.4em; }
+        }
+
+        .content1 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            font-family: doto;
+            font-weight: bold;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .description h1 {
+                font-size: 3em;
+            }
+
+            .description p {
+                font-size: 1.2em;
+            }
+
+            main {
+                padding: 3em;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .description {
+                padding: 3em;
+                min-height: 50vh;
+            }
+
+            main {
+                min-height: 50vh;
+            }
+
+            .social-links {
+                position: relative;
+                left: 0;
+                bottom: 0;
+                margin-top: 2em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .description h1 {
+                font-size: 2.5em;
+            }
+
+            .description p {
+                font-size: 1.1em;
+            }
+
+            main {
+                padding: 2em;
+            }
+
+            form {
+                gap: 1.5em;
+            }
+
+            select, button {
+                padding: 0.8em;
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .description {
+                padding: 2em;
+            }
+
+            .description h1 {
+                font-size: 2em;
+            }
+
+            .logo {
+                top: 1em;
+                left: 1em;
+                width: 40px;
+                height: 40px;
+            }
+
+            .logo i {
+                font-size: 1.5em;
+            }
+
+            .social-links {
+                gap: 1em;
+            }
+
+            .social-links a {
+                font-size: 1.5em;
+            }
+        }
+        :-webkit-scrollbar {
+    width: 12px; /* Width of the scrollbar */
+    height: 12px; /* Height of the scrollbar (horizontal scrollbar) */
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #6200ea, #3700b3); /* Thumb (scroll bar slider) color */
+    border-radius: 6px; /* Rounded edges for the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #3700b3, #6200ea); /* Change color on hover */
+}
+
+::-webkit-scrollbar-track {
+    background: #f0f0f5; /* Track (background of the scrollbar) color */
+    border-radius: 6px; /* Optional: Rounded edges for the track */
+    margin: 2px; /* Add some spacing around the scrollbar */
+}
+
+/* Custom Scrollbar - For Firefox */
+* {
+    scrollbar-width: thin; /* Makes the scrollbar smaller */
+    scrollbar-color: #6200ea #f0f0f5; /* Thumb color and track color */
+}
+
+/* Scrollbar for specific elements (e.g., <main>) */
+main {
+    overflow-y: auto; /* Ensure the main section is scrollable */
+    scrollbar-width: thin; /* Makes the scrollbar smaller */
+    scrollbar-color: #6200ea #f0f0f5; /* Thumb color and track color */
+}
+/* Custom highlight styling when selecting text */
+::selection {
+    background: #3700b3; /* Custom background color for selection */
+    color: #fff; /* Custom text color for selection */
+}
+
+::-moz-selection {
+    background: #3700b3; /* Custom background color for Firefox */
+    color: #fff; /* Custom text color for Firefox */
+}
+.skin_tone {
+    color: #fff; /* Default color */
+    text-decoration: none; /* Remove underline */
+    transition: color 0.3s ease, transform 0.3s ease; /* Add smooth transitions for color and animation */
+}
+
+.skin_tone:hover {
+    color: #ff6347; /* Change color on hover (e.g., tomato red) */
+    transform: scale(1.1); /* Slightly increase the size for a zoom effect */
+}
+.skin_tone1 {
+    color: #fff; /* Default color */
+    text-decoration: none; /* Remove underline */
+    transition: color 0.3s ease, transform 0.3s ease; /* Add smooth transitions for color and animation */
+}
+
+.skin_tone1:hover {
+    color: #ff6347; /* Change color on hover (e.g., tomato red) */
+    transform: scale(1.1); /* Slightly increase the size for a zoom effect */
+}
+.logo {
+    position: absolute;
+    top: 2em;
+    left: 2em;
+    width: clamp(40px, 5vw, 60px); /* Responsive width */
+    height: clamp(40px, 5vw, 60px); /* Responsive height */
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.logo i {
+    font-size: clamp(1.2em, 2.5vw, 2em); /* Responsive font size */
+    color: #6200ea;
+}
+
+/* Update the media queries for better logo responsiveness */
+
+@media (max-width: 1200px) {
+    .logo {
+        top: 1.5em;
+        left: 1.5em;
+    }
+}
+
+@media (max-width: 992px) {
+    .logo {
+        top: 1.2em;
+        left: 1.2em;
+    }
+}
+
+@media (max-width: 768px) {
+    .logo {
+        top: 1em;
+        left: 1em;
+        width: clamp(35px, 4vw, 50px);
+        height: clamp(35px, 4vw, 50px);
+    }
+
+    .logo i {
+        font-size: clamp(1em, 2vw, 1.5em);
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        width: clamp(30px, 3.5vw, 40px);
+        height: clamp(30px, 3.5vw, 40px);
+    }
+
+    .logo i {
+        font-size: clamp(0.8em, 1.8vw, 1.2em);
+    }
+}
+
+/* Add hover effect */
+.logo:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* For very small screens */
+@media (max-width: 320px) {
+    .logo {
+        width: 28px;
+        height: 28px;
+        top: 0.8em;
+        left: 0.8em;
+    }
+
+    .logo i {
+        font-size: 0.9em;
+    }
+}
+
+.footer {
+            background: #ffffff;
+            color: #000000;
+            padding: 2rem 4rem;
+            font-family: 'Doto', monospace;
+            margin-top: 2rem;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .footer-info p {
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+
+        }
+
+      
+
+        @media (max-width: 768px) {
+            .footer {
+                padding: 2rem;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+         
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="hexagon" aria-label="Animated hexagonal ripples">
+            <div class="hexagon__group">
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+            </div>
+            <div class="hexagon__group">
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+            </div>
+            <div class="hexagon__group">
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+            </div>
+            <div class="hexagon__group">
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+            </div>
+            <div class="hexagon__group">
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+            </div>
+            <div class="hexagon__group">
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+                <div class="hexagon__sector"></div>
+            </div>
+        </div>
+        <p class="content1">Loading</p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <div class="container">
+            <div class="description">
+                <div class="logo">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h1>Seasonal Color Classifier</h1>
+                <p>
+                    Discover your seasonal color palette with ease! Use our advanced classifier to find out whether you're a Spring, Summer, Autumn, or Winter, and receive personalized color recommendations for your wardrobe and style.
+                </p>
+                <p>
+                    <a class="skin_tone" href="https://skinkraft.com/blogs/articles/how-to-know-your-skin-tone-and-skin-undertone" target="_blank" rel="noopener noreferrer">
+                        Know your Skin-tone and undertone here
+                    </a>
+                </p>
+                <p>
+                    <a class="skin_tone1" href="https://cozyrebekah.com/2019/11/15/contrast-levels/" target="_blank" rel="noopener noreferrer">
+                        Know your contrast level here
+                    </a>
+                </p>
+                <div class="social-links">
+                    <a href="#" target="_blank"><i class="fab fa-facebook"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            <main>
+                <form id="colorForm">
+                    <div class="form-group">
+                        <label for="skin_tone">
+                            <i class="fas fa-user"></i> Skin Tone
+                        </label>
+                        <select id="skin_tone" name="skin_tone">
+                            <option value="fair-cool">Fair-Cool</option>
+                            <option value="fair-warm">Fair-Warm</option>
+                            <option value="medium-cool">Medium-Cool</option>
+                            <option value="medium-warm">Medium-Warm</option>
+                            <option value="deep-cool">Deep-Cool</option>
+                            <option value="deep-warm">Deep-Warm</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hair_color">
+                            <i class="fas fa-cut"></i> Hair Color
+                        </label>
+                        <select id="hair_color" name="hair_color">
+                            <option value="blonde">Blonde</option>
+                            <option value="red">Red</option>
+                            <option value="brown">Brown</option>
+                            <option value="black">Black</option>
+                            <option value="dark-brown">Dark Brown</option>
+                            <option value="golden-brown">Golden Brown</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eye_color">
+                            <i class="fas fa-eye"></i> Eye Color
+                        </label>
+                        <select id="eye_color" name="eye_color">
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="brown">Brown</option>
+                            <option value="hazel">Hazel</option>
+                            <option value="gray">Gray</option>
+                            <option value="dark-brown">Dark Brown</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="undertone">
+                            <i class="fas fa-tint"></i> Undertone
+                        </label>
+                        <select id="undertone" name="undertone">
+                            <option value="cool">Cool</option>
+                            <option value="warm">Warm</option>
+                            <option value="neutral">Neutral</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contrast_level">
+                            <i class="fas fa-adjust"></i> Contrast Level
+                        </label>
+                        <select id="contrast_level" name="contrast_level">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                    <button type="button" onclick="submitForm()">
+                        <i class="fas fa-magic"></i> Predict My Season
+                    </button>
+                </form>
+                <div class="result" id="result"></div>
+            </main>
+        </div>
+    </div>
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <p>Developed by Afjal Hussein</p>
+                <p>Used languages: HTML, CSS, JS, and Python (Flask)</p>
+              
+                <p>Fonts: Poppins and Doto</p>
+            </div>
+        
+    </footer>
+    
+
+    
+
+    <script>
+        // Load main content after delay with 3D animation
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loading-screen').style.display = 'none';
+                const mainContent = document.getElementById('main-content');
+                mainContent.style.display = 'block';
+                // Trigger reflow
+                void mainContent.offsetWidth;
+                mainContent.classList.add('show');
+            }, 3000); // 3 seconds delay
+        });
+
+        async function submitForm() {
+            const form = document.getElementById('colorForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `
+                    <h2><i class="fas fa-star"></i> Your Color Season: ${result.season}</h2>
+                    <p><i class="fas fa-chart-line"></i> Confidence Score: ${result.confidence}</p><br>
+                    <h3><i class="fas fa-list"></i> Recommendations:</h3>
+                    <ul>
+                        ${Object.entries(result.recommendations).map(([key, value]) => {
+                            if (key !== 'confidence') return `
+                                <li>
+                                    <strong><i class="fas fa-palette"></i> ${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> 
+                                    ${Array.isArray(value) ? value.join(', ') : value}
+                                </li>`;
+                        }).join('')}
+                    </ul>
+                    <p><strong><i class="fas fa-info-circle"></i> Note:</strong> ${result.recommendations.confidence.message}</p>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<p style="color: red;">Failed to get a prediction: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
